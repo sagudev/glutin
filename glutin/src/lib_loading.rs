@@ -33,12 +33,16 @@ impl<T: SymLoading> SymWrapper<T> {
                 let lib = Library::new(path);
 
                 if let Ok(lib) = lib {
-                    return Ok(SymWrapper { sym: T::load_with(&lib), _lib: Arc::new(lib) });
+                    return Ok(Self::from_lib(lib));
                 }
             }
         }
 
         Err(())
+    }
+
+    pub unsafe fn from_lib(lib: Library) -> Self {
+        unsafe { SymWrapper { sym: T::load_with(&lib), _lib: Arc::new(lib) } }
     }
 }
 

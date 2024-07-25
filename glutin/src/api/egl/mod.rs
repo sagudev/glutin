@@ -29,6 +29,21 @@ pub mod display;
 pub mod surface;
 
 pub(crate) static EGL: Lazy<Option<Egl>> = Lazy::new(|| {
+    #[cfg(feature = "static-egl")]
+    {
+        // static egl was requested
+        #[cfg(unix)]
+        let this: Library = libloading::os::unix::Library::this().into();
+        #[cfg(windows)]
+        let this: Library = libloading::os::windows::Library::this().into();
+
+        unsafe {
+            // check is static egl is actually available
+            if this.get::<EglGetProcAddress>(b"eglGetProcAddress\0").is_ok() {
+                return Some(Egl(SymWrapper::from_lib(this)));
+            }
+        }
+    }
     #[cfg(windows)]
     let paths = ["libEGL.dll", "atioglxx.dll"];
 
